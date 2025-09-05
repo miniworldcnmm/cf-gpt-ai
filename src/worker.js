@@ -1,107 +1,16 @@
 // src/worker.js
-// 完整 Worker 文件 —— HTML 已 Base64 内嵌，getHTML() 解码返回，避免构建错误。
+// 完整 Worker：已将前端 HTML 放入 getHTML()，避免构建器把 HTML 当作 JS 解析。
 
-// ------------------ 响应式 HTML 的 Base64（不要编辑此行注释） ------------------
-const HTML_BASE64 = "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9InpoLUNOIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCwgdmlld3BvcnQtZml0PWNvdmVyIj4KICAgIDx0aXRsZT5DRiBBSSBDaGF0IC0gUmVzcG9uc2l2ZTwvdGl0bGU+CiAgICA8c3R5bGU+CiAgICAgICAgLyogUmVzZXQgJiBiYXNlICovCiAgICAgICAgKiB7IG1hcmdpbiwgMCA7IHBhZGRpbmc6IDAgOyBib3gtc2l6aW5nOiBib3JkZXItYm94OyB9CiAgICAgICAgaHRtbCwgYm9keSB7IGhlaWdodDogMTAwJTsgfQogICAgICAgIGJvZHkgeyBmb250LWZhbWlseTogLWFwcGxlLXN5c3RlbSwgQmxpbmtNYWNyb3N5c3RpbmYsICJTZWdvZSBVSSIsIFJvYm90bywgIkhlbHZldGljYSBOZXVlIiwgQXJpYWwsICJOb3RvIFNhbnMiLCJNaWNyb3NvZnQgWWFIZWkiLCBzYW5zLXNlcmlmOyBiYWNrZ3JvdW5kOiBsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCAjNjY3ZWVhIDAlLCAjNzY0YmEyIDEwMCUpOyBjb2xvcjojMTExODI3OyB9CgogICAgICAgIC8qIExheW91dCBjb250YWluZXIgKi8KICAgICAgIC5hcHAgeyB3aWR0aDogMTAwJTsgaGVpZ2h0OiAxMDB2aHg7IGRpc3BsYXk6IGZsZXg7IGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47IGJhY2tncm91bmQ6IHdoaXRlOyBib3JkZXItcmFkaXVzOiA4cHggOyBvdmVyZmxvdzogaGlkZGVuOyB9CiAgICAgICAgLmhlYWRlciB7IGRpc3BsYXkOZmxleDsgYWxpZ24taXRlbXM6IGNlbnRlcjsganVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47IGdhcDogMTJweDsgcGFkZGluZzoxMnB4IDE2cHg7IGJhY2tncm91bmQ6IGxpbmVhcjogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgIzRmNDZlNSAwJSwgIzdjM2FlZCAxMDAlKTsgY29sb3I6ICNmZmY7IH0KICAgICAgICAuaGVhZGVyLWxlZnQgeyBkaXNwbGF5OmZsZXg7IGFsaWduLWl0ZW1zOmNlbnRlcjsgZ2FwOjEycHg7IH0KICAgICAgICAubG9nbyB7IGZvbnQtc2l6ZToxOHB4OyBmb250LXdlaWdodDoxMDA7IH0KICAgICAgICAuc3VidGl0bGUgeyBmb250LXNpemU6MTJweDsgb3BhY2l0eTowLjk7IH0KCiAgICAgICAgLyogU2lkZWJhciAmIG1haW4gKi8KICAgICAgICAubWFpbi13cmFwIHsgZmxleDoxOyBkaXNwbGF5OmZsZXg7IG1pbi1oZWlnaHQ6MDsgLyogYWxsb3cgY2hpbGRyZW4gdG8gc2Nyb2xsICovIH0KCiAgICAgICAgLnNpZGViYXIgeyB3aWR0aDowLjg4OTk5OTk5OwAgaW5pdGlhbC13aWR0aDowLjg4OTk5OTk5OyBtYXgtd2lkdGg6IDM4MHB4OyBtaW4td2lkdGg6MjQwcHg7IGJhY2tncm91bmQ6I2Y4ZmFmYzt9CiAgICAgICAgLmNoYXQgeyBmbGV4OjE7IGRpc3BsYXk6ZmxleDsgZmxleC1kaXJlY3Rpb246Y29sdW1uOyBtaW4td2lkdGg6MDsgfQoICAgICAgICAubWVzc2FnZXMgeyBmbGV4OjE7IG92ZXJmbG93LXk6IGF1dG87IHBhZGRpbmc6IDE2cHg7IGJhY2tncm91bmQ6ICNmYWZmYWY7IG1pbi1oZWlnaHQ6MDsgfQoICAgICAgICAubWVzc2FnZSB7IG1hcmdpbi1ib3R0b206IDE2cHg7IG1heC13aWR0aDo4MCU7IH0KICAgICAgICAubWVzc2FnZS51c2VyIHsgbWFyZ2luLWxlZnQ6YXV0bzsgfQogICAgICAgIC5tZXNzYWdlLWNvbnRlbnQgeyBwYWRkaW5nOjEycHggMTRweDsgYm9yZGVyLXJhZGl1czoxMnB4OyBsaW5lLWhlaWdodDoxLjY7IH0KICAgICAgICAubWVzc2FnZS51c2VyIC5tZXNzYWdlLWNvbnRlbnQgeyBiYWNrZ3JvdW5kOiAjNGY0NmU1OyBjb2xvcjojZmZmOyB9CiAgICAgICAgLm1lc3NhZ2UuYXNzaXN0YW50IC5tZXNzYWdlLWNvbnRlbnQgeyBiYWNrZ3JvdW5kOiNmZmY7IGJvcmRlcjoxcHggc29saWQgI2UyZThmMDsgfQoCiAgICAgICAgLmlucHV0LWFyZWEgeyBwYWRkaW5nOjEycHg7IGJvcmRlci10b3A6MXB4IHNvbGlkICNlMmU4ZjA7IGJhY2tncm91bmQ6IHdoaXRlOyB9CiAgICAgICAgLmlucHV0LXJvdyB7IGRpc3BsYXk6IGZsZXg7IGdhcDogOHB4OyBhbGlnbi1pdGVtczpjZW50ZXI7IH0KICAgICAgICAubWVzc2FnZS1pbnB1dCB7IGZsZXg6MTsgbWluLWhlaWdodDoyLjZweDsgcGFkZGluZzoxMnB4OyBib3JkZXI6MXB4IHNvbGlkICNkMWQ1ZGI7IGJvcmRlci1yYWRpdXM6MTJweDsgcmVzaXplOnZlcnRpY2FsOyBmb250LXNpemU6MTRweDsgfQogICAgICAgIC5idG4geyBiYWNrZ3JvdW5kOiM0ZjQ2ZTU7IGNvbG9yOiNmZmY7IGJvcmRlcjpub25lOyBwYWRkaW5nOjEwcHggMTRweDsgYm9yZGVyLXJhZGl1czoxMHB4OyBjdXJzb3I6cG9pbnRlcjsgZm9udC13ZWlnaHQ6NjAwOyB9CiAgICAgICAgLmJ0bi5zZWNvbmRhcnkgeyBiYWNrZ3JvdW5kOiM2YjcyODA7IH0KICAgICAgICAuc2VuZC1idG4geyBoZWlnaHQ6NDBweDsgcGFkZGluZzogMDggMjBweDsgYmFja2dyb3VuZDogIzEwYjk4MTsgYm9yZGVyLXJhZGl1czoxMnB4OyB9CiAgICAgICAgLmxvYWRpbmcgeyBkaXNwbGF5Om5vbmU7IHRleHQtYWxpZ246Y2VudGVyOyBwYWRkaW5nOjEycHg7IGNvbG9yOiM2YjcyODA7IH0KCiAgICAgICAgLyogTW9kZWwgJiBhdXRoIGJsb2NrcyAqLwogICAgICAgIC5hdXRoLXNlY3Rpb24sIC5tb2RlbC1zZWN0aW9uIHsgbWFyZ2luLWJvdHRvbToxNnB4OyB9CiAgICAgICAgLmF1dGgtc2VjdGlvbiB7IHBhZGRpbmc6MTJweDsgYm9yZC1yYWRpdXM6MTJweDsgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgI2ZmYTlhOSAwJSwgI3RlY2YlMDAgMTAwJSk7IGJvcmRlcjojMmI2YjlkOyB9CiAgICAgICAgLmF1dGgtc2VjdGlvbi5hdXRoZW50aWNhdGVkIHsgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgI2E4ZWRlYSAwJSwgI2ZlZDZlMyAxMDAlKTsgYm9yZGVyLWNvbG9yOiAjNGZhY2ZlOyB9CiAgICAgICAgLm1vZGVsLXNlbGVjdCwgLmlucHV0LWdyb3VwIGlucHV0IHsgd2lkdGg6IDEwMCU7IHBhZGRpbmc6IDEwcHg7IGJvcmRlcjoxcHggc29saWQgI2QxZDVkYjsgYm9yZGVyLXJhZGl1czg6O30KICAgICAgICAubW9kZWwtaW5mbyB7IGJhY2tncm91bmQ6I2YxZjVmOTsgcGFkZGluZzoxMHB4OyBib3JkZXItcmFkaXVzOjhweDsgZm9udC1zaXplOjEzcHg7IGxpbmUtaGVpZ2h0OjEuNDsgbWFyZ2luLXRvcDo4cHg7IH0KCiAgICAgICAgLyogQ29kZSBibG9jayBzdHlsZXMgKi8KICAgICAgICAuY29kZS1ibG9jayB7IG1hcmdpbjoxMnB4IDA7IGJvcmRlci1yYWRpdXM6OHB4OyBvdmVyZmxvdzoWaGlkZGVuOyBib3JkZXI6MXB4IHNvbGlkICNkMWQ1ZGI7IGJhY2tncm91bmQ6ICNmZmY7IH0KICAgICAgICAuY29kZS1oZWFkZXIgeyBiYWNrZ3JvdW5kOiNmOWZhZmI7IHBhZGRpbmc6OHB4IDEycHg7IGRpc3BsYXk6ZmxleDsganVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47IGJvcmRlci1ib3R0b206MXB4IHNvbGlkICNlNWU3ZWI7IGZvbnQtc2l6ZToxMnB4OyB9CiAgICAgICAgcHJlIHsgcGFkZGluZzoxMnB4OyBtYXJnaW46MDsgb3ZlcmZsb3c6YXV0bzsgZm9udC1mYW1pbHk6ICdGaXJhIENvZGUnLCAnQ29uc29sYScsIG1vbm9zcGFjZTsgZm9udC1zaXplOjEzcHg7IH0KICAgICAgICAuaW5saW5lLWNvZGUgeyBiYWNrZ3JvdW5kOiNmM2Y0ZjY7IHBhZGRpbmc6MnB4IDZweDsgYm9yZGVyLXJhZGl1czoxMHB4OyB9CiAgICAgICAgCiAgICAgICAgLyogTWFya2Rvd24gc3R5bGUgKGV0Yy4pICovCiAgICAgICAgLm1kLWhxMSB7IGZvbnQtc2l6ZToxOHB4OyBmb250LXdlaWdodDoxMDA7IGNvbG9yOiMxZjI5Mzc7IG1hcmdpbjoxMHB4IDA7IGJvcmRlci1ib3R0b206MnB4IHNvbGlkICNlNWU3ZWI7IHBhZGRpbmc6NXB4OyB9CiAgICAgICAgLm1kLWEyIHsgZm9udC1zaXplOjE2cHg7IGZvbnQtd2VpZ2h0OjcwMDsgY29sb3I6IzM3NDUxOyBtYXJnaW46OHB4IDA7IH0KICAgICAgICAubWR1bCB7IG1hcmdpbjothfM7IH0KICAgICAgICAubWRibG9ja3F1b3RlIHsgYmFja2dyb3VuZDogI2YzZjRmNjsgYm9yZGVyLWxlZnQ6NHB4IHNvbGlkICM2YjcyODA7IHBhZGRpbmc6MTBweDsgbWFyZ2luOjhweDsgZmVudC1zdHlsZTppdGFsaWM7IH0KCiAgICAgICAgLyogSGVhZGVyIG1vYmlsZSBjb250cm9scyAqLwogICAgICAgIC5oZWFkZXIgLmNvbnRyb2xzIHsgZGlzcGxheTpmbGV4OyBndXBzOjhweDsgYWxpZ24taXRlbXM6Y2VudGVyOyB9CiAgICAgICAgLmhhbWJ1cmdlciB7IGRpc3BsYXk6bm9uZTsgd2lkdGg6NDBweDsgaGVpZ2h0OjQwcHggOyBib3JkZXItcmFkaXVzOjhweDsgYmFja2dyb3VuZDogcmdiYSgtKSB9CgogICAgICAgIC8qIFNpZGViYXIgb3ZlcmxheSBmb3IgbW9iaWxlICovCiAgICAgICAgLnNpZGViYXIuY292ZXIgeyBwb3NpdGlvbjpmpeJ9CiAgICAgICAgPC9zdHlsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxkaXYgY2xhc3M9ImFwcCIgaWQ9ImFwcCI+CiAgICAgICAgPGhlYWRlcj4KICAgICAgICAgICAgPGRpdiBjbGFzcz0iaGVhZGVyLWxlZnQiPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzcz0iaGFtYnVyZ2VyIiBpZD0iaGFtYnVyZ2VyIiByb2xlPSJidXR0b24iIGFyaWEtbGFiZWw9IuS9kSIgdGl0bGU9IuS9kSI+4oCiPC9kaXY+CiAgICAgICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImxvZ28iPuKAmkNIIEFJIENoYXQ8L2Rpdj4KICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJzdWJ0aXRsZSI+5rWL6K+V5ZCI77yM5p2O5YyWPC9kaXY+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9ImNvbnRyb2xzIj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImF1dGhvcmluZm8iIGlkPSJhdXRobkJ0biIgc3R5bGU9InRleHQ6IHdoaXRlOyBwYWRkaW5nOjZweCAxMHB4OyBib3JkZXItcmFkaXVzOjhweDsiPgogICAgICAgICAgICAgICAgICAgIDxwPjEmJmNvcHR7PC9wPgogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICA8L2hlYWRlcj4KCiAgICAgICAgPGRpdiBjbGFzcz0ibWFpbi13cmFwIj4KICAgICAgICAgICAgPCEtLSBTaWRlYmFyIGZvciBkZXNrdG9wIC0tPgogICAgICAgICAgICA8YXNpZGUgY2xhc3M9InNpZGViYXIiIGlkPSJzaWRlYmFyIj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImF1dGgtc2VjdGlvbiIgaWQ9ImF1dGhTZWN0aW9uIj4KICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1ncm91cCI+CiAgICAgICAgICAgICAgICAgICAgICAgIDxsYWJlbD4uLi48L2xhYmVsPgogICAgICAgICAgICAgICAgICAgICAgICA8aW5wdXQgdHlwZT0icGFzc3dvcmQiIGlkPSJwYXNzd29yZElucHV0IiBwbGFjZWhvbGRlcj0i5L2T5aW9Iikgb25rZXlkb3duPSJoYW5kbGVQYXNzd29yZEtleURvd24oZXZlbnQpIj4KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJtYXJnaW4tdG9wOjEwcHg7ZGlzcGxheTpmbGV4O2dhcDo4cHg7Ij4KICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBjbGFzcz0iYnRuIiBvbmNsaWNrPSJhdXRoZW50aWNhdGUoKSI+5b3g5a2QPC9idXR0b24+CiAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9ImJ0biBzZWNvbmRhcnkiIG9uY2xpY2s9InRlc3RDb3B5RnVuY3Rpb24oKSI+6YWN5YyBBPC9idXR0b24+CiAgICAgICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJtb2RlbC1zZWN0aW9uIiBpZD0ibW9kZWxTZWN0aW9uIiBzdHlsZT0iZGlzcGxheTpub25lOyI+CiAgICAgICAgICAgICAgICAgICAgPGEgaHJlZj0iLyI+44CC44CCPC9hPgogICAgICAgICAgICAgICAgICAgIDxzZWxlY3QgaWQ9Im1vZGVsU2VsZWN0IiBjbGFzcz0ibW9kZWwtc2VsZWN0IiBvbmNoYW5nZT0idXBkYXRlTW9kZWxJbmZvKCkiPgogICAgICAgICAgICAgICAgICAgICAgICA8b3B0aW9uIHZhbHVlPSIiPlx1NDBkNjUg5b3Ag5b2Q5LiKPC9vcHRpb24+CiAgICAgICAgICAgICAgICAgICAgPC9zZWxlY3Q+CiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzcz0ibW9kZWwtaW5mbyIgaWQ9Im1vZGVsSW5mbyI+5L2g5aW9PC9kaXY+CiAgICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJoaXN0b3J5LXNlY3Rpb24iIGlkPSJoaXN0b3J5U2VjdGlvbiIgc3R5bGU9ImRpc3BsYXk6bm9uZTsiPgogICAgICAgICAgICAgICAgICAgIDxoMyA+4oCiPC9oMz4KICAgICAgICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJkaXNwbGF5OmZsZXg7Z2FwOjhweDsgZmxleC13cmFwOnRy1zc7Ij4KICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBjbGFzcz0iYnRuIHNlY29uZGFyeSIgb25jbGljaz0ibG9hZEhpc3RvcnkoKSI+5bGxPC9idXR0b24+CiAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9ImJ0biBzZWNvbmRhcnkiIG9uY2xpY2s9ImNsZWFySGlzdG9yeSgpIj7lvJfloLzlj7w8L2J1dHRvbj4KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgPGRpdiBzdHlsZT0iZm9udC1zaXplOjEzcHggY29sb3I6I2ZiZmZiOyBtYXJnaW46OHB4IDA7Ij4KICAgICAgICAgICAgICAgICAgICA8cD7kuI3nq6jlj5HljaE8L3A+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC9hc2lkZT4KCiAgICAgICAgICAgIDwhLS0gT3ZlcmxheSBzaWRlYmFyIGZvciBtb2JpbGUgLS0+CiAgICAgICAgICAgIDxhc2lkZSBjbGFzcz0ic2lkZWJhciBvdmVybGF5IiBpZD0ibW9iaWxlU2lkZWJhciIgYXJpYS1oaWRkZW49InRydWUiPjwvYXNpZGU+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9ImJhY2tncm90IiBpZD0iYmFja2Ryb3AiIHRhYj0iLTEiIGFyaWEtaGlkZGVuPSJ0cnVlIj48L2Rpdj4KCiAgICAgICAgICAgIDxtYWluIGNsYXNzPSJjaGF0IiBpZD0iY2hhdEFyZWEiPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzcz0ibWVzc2FnZXMiIGlkPSJtZXNzYWdlcyIgcm9sZT0ibG9nIiBhcmktbGl2ZT0icG9saXRlIj4KICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJtZXNzYWdlIGFzc2lzdGFudCI+CiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9Im1lc3NhZ2UtY29udGVudCI+8J+RiCDotVIG5aW5u5pc3aG5mW5k8L2Rpdj4KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgPGRpdiBjbGFzcz0ibG9hZGluZyIgaWQ9ImxvYWRpbmciPuS6pXxEPC9kaXY+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1hcmVhIj4KICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJpbnB1dC1yb3ciPgogICAgICAgICAgICAgICAgICAgICAgICA8dGV4dGFyZWEgY2xhc3M9Im1lc3NhZ2UtaW5wdXQiIGlkPSJtZXNzYWdlSW5wdXQiIHBsYWNlaG9sZGVyPSLkuK3liI98IiBhcmlhLWxhYmVsPSLlwqZJbCIgZGlzYWJsZWQgb25rZXlkb3duPSJoYW5kbGVLZXlEb3duKGV2ZW50KSI+PC90ZXh0YXJlYT4KICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBjbGFzcz0iYnRuIHNlbmQtYnRuIiBpZD0ic2VuZEJ0biIgb25jbGljaz0ic2VuZE1lc3NhZ2UoKSIgZGlzYWJsZWQ+5ZyLPC9idXR0b24+CiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICA8L21haW4+CiAgICAgICAgPC9kaXY+CjwvYm9keT4K
-";
-// -------------------------------------------------------------------------------
-
-// ========== Worker 主体 ==========
-
-export default {
-  async fetch(request, env, ctx) {
-    // 验证作者信息完整性（若失败，返回 403）
-    try {
-      verifyAuthorInfo();
-    } catch (error) {
-      return new Response(JSON.stringify({
-        error: error.message,
-        status: "服务已停止运行"
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const url = new URL(request.url);
-
-    // CORS 头
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    try {
-      // 根路径返回 HTML
-      if (url.pathname === '/') {
-        return new Response(getHTML(), {
-          headers: { 'Content-Type': 'text/html; charset=utf-8', ...corsHeaders }
-        });
-      }
-
-      // /api/models 返回 MODEL_CONFIG
-      if (url.pathname === '/api/models') {
-        return new Response(JSON.stringify(MODEL_CONFIG), {
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
-        });
-      }
-
-      // /api/chat POST
-      if (url.pathname === '/api/chat' && request.method === 'POST') {
-        return await handleChat(request, env, corsHeaders);
-      }
-
-      // /api/history GET
-      if (url.pathname === '/api/history' && request.method === 'GET') {
-        return await getHistory(request, env, corsHeaders);
-      }
-
-      // /api/history POST
-      if (url.pathname === '/api/history' && request.method === 'POST') {
-        return await saveHistory(request, env, corsHeaders);
-      }
-
-      // /api/debug-gpt POST
-      if (url.pathname === '/api/debug-gpt' && request.method === 'POST') {
-        return await debugGPT(request, env, corsHeaders);
-      }
-
-      return new Response('Not Found', { status: 404, headers: corsHeaders });
-
-    } catch (error) {
-      console.error('Worker error:', error);
-      return new Response(JSON.stringify({ error: '服务器内部错误' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      });
-    }
-  }
-};
-
-// ----------------------- 服务器端常量与函数（保留你原始逻辑） -----------------------
-
+// 作者信息保护 - 不可篡改
 const AUTHOR_INFO = {
   name: "康康的订阅天地",
   platform: "YouTube",
   verified: true
 };
 
-function verifyAuthorInfo() {
-  if (AUTHOR_INFO.name !== "康康的订阅天地" ||
-      AUTHOR_INFO.platform !== "YouTube" ||
-      !AUTHOR_INFO.verified) {
-    throw new Error("作者信息已被篡改，服务拒绝运行！请保持原始作者信息：YouTube：康康的订阅天地");
-  }
-}
-
+// 模型参数配置函数
 function getModelOptimalParams(modelKey, modelId) {
   const baseParams = { stream: false };
-
   switch (modelKey) {
     case 'deepseek-r1':
       return { ...baseParams, max_tokens: 8192, temperature: 0.8, top_p: 0.9, top_k: 50, repetition_penalty: 1.1, frequency_penalty: 0.1, presence_penalty: 0.1 };
@@ -119,6 +28,7 @@ function getModelOptimalParams(modelKey, modelId) {
   }
 }
 
+// 模型配置（保持原始信息）
 const MODEL_CONFIG = {
   "deepseek-r1": {
     "id": "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
@@ -188,12 +98,90 @@ const MODEL_CONFIG = {
   }
 };
 
-// ----------------- 路由处理与 AI 调用函数 -----------------
+// Helper: 验证作者信息完整性
+function verifyAuthorInfo() {
+  if (AUTHOR_INFO.name !== "康康的订阅天地" ||
+      AUTHOR_INFO.platform !== "YouTube" ||
+      !AUTHOR_INFO.verified) {
+    throw new Error("作者信息已被篡改，服务拒绝运行！请保持原始作者信息：YouTube：康康的订阅天地");
+  }
+}
+
+// export default fetch handler
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      // 本地验证作者信息
+      verifyAuthorInfo();
+    } catch (error) {
+      return new Response(JSON.stringify({
+        error: error.message,
+        status: "服务已停止运行"
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const url = new URL(request.url);
+
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    try {
+      if (url.pathname === '/') {
+        return new Response(getHTML(), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', ...corsHeaders }
+        });
+      }
+
+      if (url.pathname === '/api/models') {
+        return new Response(JSON.stringify(MODEL_CONFIG), {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
+
+      if (url.pathname === '/api/chat' && request.method === 'POST') {
+        return await handleChat(request, env, corsHeaders);
+      }
+
+      if (url.pathname === '/api/history' && request.method === 'GET') {
+        return await getHistory(request, env, corsHeaders);
+      }
+
+      if (url.pathname === '/api/history' && request.method === 'POST') {
+        return await saveHistory(request, env, corsHeaders);
+      }
+
+      if (url.pathname === '/api/debug-gpt' && request.method === 'POST') {
+        return await debugGPT(request, env, corsHeaders);
+      }
+
+      return new Response('Not Found', { status: 404, headers: corsHeaders });
+    } catch (error) {
+      console.error('Worker error:', error);
+      return new Response(JSON.stringify({ error: '服务器内部错误' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+  }
+};
+
+// ------------------ 路由处理函数与工具函数 ------------------
 
 async function handleChat(request, env, corsHeaders) {
   try {
     const { message, model, password, history = [] } = await request.json();
 
+    // 验证密码
     if (password !== env.CHAT_PASSWORD) {
       return new Response(JSON.stringify({ error: '密码错误' }), {
         status: 401,
@@ -201,6 +189,7 @@ async function handleChat(request, env, corsHeaders) {
       });
     }
 
+    // 测试消息
     if (message === 'test') {
       return new Response(JSON.stringify({ reply: 'test', model: 'test' }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -258,12 +247,12 @@ async function handleChat(request, env, corsHeaders) {
         response = await env.AI.run(selectedModel.id, messagesParams);
         reply = extractTextFromResponse(response, selectedModel);
       }
-
     } catch (error) {
       console.error('AI模型调用失败:', error);
       throw new Error(`${selectedModel.name} 调用失败: ${error.message}`);
     }
 
+    // 处理 deepseek 的思考标签
     if (selectedModel.id.includes('deepseek') && reply && reply.includes('<think>')) {
       const thinkEndIndex = reply.lastIndexOf('</think>');
       if (thinkEndIndex !== -1) {
@@ -291,7 +280,7 @@ async function handleChat(request, env, corsHeaders) {
       error: '调用AI模型时发生错误: ' + error.message
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
@@ -387,8 +376,7 @@ async function debugGPT(request, env, corsHeaders) {
   }
 }
 
-// ----------------- 辅助：解析 AI 返回、格式化 Markdown 等 -----------------
-
+// 提取 AI 响应文本的健壮函数
 function extractTextFromResponse(response, modelConfig) {
   if (typeof response === 'string') {
     return response.trim() || '模型返回了空响应';
@@ -454,6 +442,7 @@ function extractTextFromResponse(response, modelConfig) {
   return `无法从响应中提取文本内容。响应结构: ${Object.keys(response).join(', ')}`;
 }
 
+// 代码检测与格式化辅助
 function autoDetectAndFormatCode(text) {
   const codePatterns = [
     { pattern: /^(import\s+\w+|from\s+\w+\s+import|def\s+\w+|class\s+\w+|if\s+__name__|for\s+\w+\s+in|while\s+.+:|try:|except:)/m, lang: 'python' },
@@ -469,7 +458,7 @@ function autoDetectAndFormatCode(text) {
     if (pattern.test(text) && !text.includes('```')) {
       const lines = text.split('\n');
       if (lines.length > 3 && lines.some(line => line.startsWith('  ') || line.startsWith('\t'))) {
-        return `\`\`\`${lang}\n${text}\n\`\`\``;
+        return '```' + lang + '\n' + text + '\n```';
       }
     }
   }
@@ -492,91 +481,205 @@ function detectLanguage(code) {
   ];
 
   for (const { pattern, lang } of langPatterns) {
-    if (pattern.test(code)) {
-      return lang;
-    }
+    if (pattern.test(code)) return lang;
   }
-
   return 'text';
 }
 
 function formatMarkdown(text) {
-  if (!text || typeof text !== 'string') {
-    console.warn('formatMarkdown收到无效输入:', { text, type: typeof text });
-    return text || '';
-  }
+  if (!text || typeof text !== 'string') return text || '';
 
   text = autoDetectAndFormatCode(text);
 
   function escapeHtml(str) {
     if (!str || typeof str !== 'string') return '';
-    return str.replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#39;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   text = text.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
     const detectedLang = lang || detectLanguage(code);
-    const encodedCode = btoa(unescape(encodeURIComponent(code)));
-    return `<div class="code-block">
-      <div class="code-header">
-        <span class="language">${detectedLang.toUpperCase()}</span>
-        <button class="copy-btn" onclick="copyCodeBlock(this)" data-code="${encodedCode}">复制</button>
-      </div>
-      <pre><code class="language-${detectedLang}">${escapeHtml(code)}</code></pre>
-    </div>`;
+    const encodedCode = (typeof btoa === 'function') ? btoa(unescape(encodeURIComponent(code))) : Buffer.from(code, 'utf8').toString('base64');
+    return '<div class="code-block"><div class="code-header"><span class="language">' + (detectedLang || '').toUpperCase() + '</span><button class="copy-btn" onclick="copyCodeBlock(this)" data-code="' + encodedCode + '">复制</button></div><pre><code class="language-' + detectedLang + '">' + escapeHtml(code) + '</code></pre></div>';
   });
 
-  text = text.replace(/`([^`]+)`/g, (match, code) => {
-    return `<code class="inline-code">${escapeHtml(code)}</code>`;
-  });
-
+  text = text.replace(/`([^`]+)`/g, (m, code) => '<code class="inline-code">' + escapeHtml(code) + '</code>');
   text = text.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
   text = text.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
   text = text.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
-
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="md-bold">$1</strong>');
   text = text.replace(/__(.*?)__/g, '<strong class="md-bold">$1</strong>');
-
   text = text.replace(/\*(.*?)\*/g, '<em class="md-italic">$1</em>');
   text = text.replace(/_(.*?)_/g, '<em class="md-italic">$1</em>');
-
   text = text.replace(/^\* (.*$)/gim, '<li class="md-li">$1</li>');
   text = text.replace(/^- (.*$)/gim, '<li class="md-li">$1</li>');
   text = text.replace(/^\d+\. (.*$)/gim, '<li class="md-li-ordered">$1</li>');
-
   text = text.replace(/(<li class="md-li">.*<\/li>)/s, '<ul class="md-ul">$1</ul>');
   text = text.replace(/(<li class="md-li-ordered">.*<\/li>)/s, '<ol class="md-ol">$1</ol>');
-
   text = text.replace(/^> (.*$)/gim, '<blockquote class="md-blockquote">$1</blockquote>');
-
   text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="md-link">$1</a>');
 
   const codeBlocks = [];
   text = text.replace(/<div class="code-block">[\s\S]*?<\/div>/g, (match) => {
     codeBlocks.push(match);
-    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+    return '__CODE_BLOCK_' + (codeBlocks.length - 1) + '__';
   });
 
   text = text.replace(/\n/g, '<br>');
 
   codeBlocks.forEach((block, index) => {
-    text = text.replace(`__CODE_BLOCK_${index}__`, block);
+    text = text.replace('__CODE_BLOCK_' + index + '__', block);
   });
 
   return text;
 }
 
-// getHTML(): 在 Worker 里把 Base64 解码回 HTML
+// getHTML(): 返回前端 HTML（已包含移动端优化）
 function getHTML() {
-  try {
-    // Cloudflare Worker 支持 atob
-    const html = atob(HTML_BASE64);
-    return html;
-  } catch (e) {
-    console.error('解码 HTML 失败:', e);
-    return `<!doctype html><html><head><meta charset="utf-8"><title>错误</title></head><body><h1>页面加载失败</h1><p>解码 HTML 失败。</p></body></html>`;
-  }
+  return '<!DOCTYPE html>' +
+    '<html lang="zh-CN">' +
+    '<head>' +
+    '  <meta charset="UTF-8">' +
+    '  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">' +
+    '  <title>CF AI Chat</title>' +
+    '  <style>' +
+    '    * { margin:0; padding:0; box-sizing:border-box; }' +
+    '    html,body { height:100%; }' +
+    '    body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", \"Microsoft YaHei\", sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#111827; }' +
+    '    .container { width:100vw; height:100vh; background:white; display:flex; flex-direction:column; overflow:hidden; }' +
+    '    .header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; background: linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; }' +
+    '    .header-left { display:flex; align-items:center; gap:12px; }' +
+    '    .logo { font-size:18px; font-weight:700; }' +
+    '    .subtitle { font-size:12px; opacity:0.9; }' +
+    '    .main-content { flex:1; display:flex; min-height:0; }' +
+    '    .sidebar { width:300px; min-width:240px; background:#f8fafc; border-right:1px solid #e2e8f0; padding:16px; overflow-y:auto; flex-shrink:0; }' +
+    '    .chat-area { flex:1; display:flex; flex-direction:column; min-width:0; }' +
+    '    .messages { flex:1; overflow-y:auto; padding:16px; background:#fafafa; min-height:0; }' +
+    '    .message { margin-bottom:16px; max-width:80%; }' +
+    '    .message.user { margin-left:auto; }' +
+    '    .message-content { padding:12px 14px; border-radius:12px; line-height:1.6; }' +
+    '    .message.user .message-content { background:#4f46e5; color:#fff; }' +
+    '    .message.assistant .message-content { background:#fff; border:1px solid #e2e8f0; }' +
+    '    .input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; }' +
+    '    .input-container { display:flex; gap:8px; align-items:flex-end; }' +
+    '    .message-input { flex:1; min-height:48px; max-height:180px; padding:12px; border:1px solid #d1d5db; border-radius:12px; resize:vertical; font-size:14px; }' +
+    '    .btn { background:#4f46e5; color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }' +
+    '    .btn.secondary { background:#6b7280; }' +
+    '    .send-btn { background:#10b981; }' +
+    '    .loading { display:none; text-align:center; padding:12px; color:#6b7280; }' +
+    '    .code-block { margin:12px 0; border-radius:8px; overflow:hidden; border:1px solid #d1d5db; background:#fff; }' +
+    '    .code-header { background:#f9fafb; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e5e7eb; font-size:12px; }' +
+    '    pre { padding:12px; margin:0; overflow:auto; font-family: Fira Code, Consolas, monospace; font-size:13px; }' +
+    '    .md-h1 { font-size:20px; font-weight:700; color:#1f2937; margin:10px 0; }' +
+    '    .md-h2 { font-size:18px; font-weight:700; color:#374151; margin:8px 0; }' +
+    '    .hamburger { display:none; width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.06); align-items:center; justify-content:center; cursor:pointer; }' +
+    '    .backdrop { display:none; }' +
+    '    @media (max-width:900px) {' +
+    '      .sidebar { position:fixed; left:0; top:64px; bottom:0; width:78%; max-width:380px; transform:translateX(-110%); transition: transform .28s ease, box-shadow .28s ease; z-index:60; background:#f8fafc; overflow-y:auto; -webkit-overflow-scrolling:touch; }' +
+    '      .sidebar.open { transform:translateX(0); box-shadow:12px 0 30px rgba(15,23,42,0.12); }' +
+    '      .backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:55; display:none; }' +
+    '      .backdrop.show { display:block; }' +
+    '      .hamburger { display:flex; }' +
+    '      .messages { padding-bottom:120px; }' +
+    '      .input-area { position:fixed; left:0; right:0; bottom:0; padding:10px; background:white; border-top:1px solid #e2e8f0; z-index:70; }' +
+    '      .message-input { min-height:48px; max-height:160px; font-size:15px; }' +
+    '      .btn { padding:10px 12px; border-radius:10px; }' +
+    '      .container { height:100vh; }' +
+    '    }' +
+    '    @media (max-width:520px) {' +
+    '      .message-content { font-size:14px; }' +
+    '      .messages { padding-left:12px; padding-right:12px; }' +
+    '    }' +
+    '    button:focus, select:focus, input:focus, textarea:focus { outline:3px solid rgba(79,70,229,0.18); outline-offset:2px; }' +
+    '  </style>' +
+    '</head>' +
+    '<body>' +
+    '  <div class="container">' +
+    '    <div class="header">' +
+    '      <div class="header-left">' +
+    '        <div class="hamburger" id="hamburger" aria-label="打开菜单" title="打开菜单">☰</div>' +
+    '        <div>' +
+    '          <div class="logo">🤖 CF AI Chat</div>' +
+    '          <div class="subtitle">支持多模型切换的智能聊天助手</div>' +
+    '        </div>' +
+    '      </div>' +
+    '      <div class="author-info" id="authorInfo" style="cursor:pointer;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.05);">' +
+    '        <p style="margin:0;font-size:13px;color:#fff">📺 作者：<strong>YouTube：康康的订阅天地</strong></p>' +
+    '      </div>' +
+    '    </div>' +
+    '    <div class="main-content">' +
+    '      <aside class="sidebar" id="sidebar">' +
+    '        <div class="auth-section" id="authSection" style="padding:12px;border-radius:12px;background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%);border:2px solid #ff6b9d;">' +
+    '          <div class="input-group">' +
+    '            <label style="font-size:13px;display:block;margin-bottom:8px">访问密码</label>' +
+    '            <input type="password" id="passwordInput" placeholder="请输入访问密码" onkeydown="handlePasswordKeyDown(event)" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;">' +
+    '          </div>' +
+    '          <div style="margin-top:10px;display:flex;gap:8px;">' +
+    '            <button class="btn" onclick="authenticate()">验证</button>' +
+    '            <button class="btn secondary" onclick="testCopyFunction()">测试剪贴板</button>' +
+    '          </div>' +
+    '        </div>' +
+    '        <div class="model-section" id="modelSection" style="display:none;margin-top:16px;">' +
+    '          <h3 style="margin-bottom:8px">🎯 选择AI模型</h3>' +
+    '          <select class="model-select" id="modelSelect" onchange="updateModelInfo()" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;">' +
+    '            <option value="">请选择模型...</option>' +
+    '          </select>' +
+    '          <div class="model-info" id="modelInfo" style="background:#f1f5f9;padding:10px;border-radius:8px;font-size:13px;line-height:1.4;margin-top:8px;">请先选择一个AI模型</div>' +
+    '        </div>' +
+    '        <div class="history-section" id="historySection" style="display:none;margin-top:16px;">' +
+    '          <h3 style="margin-bottom:8px">📚 聊天历史</h3>' +
+    '          <div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+    '            <button class="btn secondary" onclick="loadHistory()">加载历史</button>' +
+    '            <button class="btn secondary" onclick="clearHistory()">清空历史</button>' +
+    '          </div>' +
+    '        </div>' +
+    '      </aside>' +
+    '      <main class="chat-area">' +
+    '        <div class="messages" id="messages" role="log" aria-live="polite">' +
+    '          <div class="message assistant">' +
+    '            <div class="message-content">👋 欢迎使用CF AI Chat！请先输入密码验证身份，然后选择一个AI模型开始聊天。<br><br>🇨🇳 所有AI模型都已配置为使用中文回复，无论您使用什么语言提问，AI都会用中文回答您的问题。</div>' +
+    '          </div>' +
+    '        </div>' +
+    '        <div class="loading" id="loading">🤔 AI正在思考中...</div>' +
+    '        <div class="input-area" id="inputArea">' +
+    '          <div class="input-container">' +
+    '            <textarea class="message-input" id="messageInput" placeholder="输入您的问题..." aria-label="输入消息" disabled onkeydown="handleKeyDown(event)"></textarea>' +
+    '            <button class="btn send-btn" id="sendBtn" onclick="sendMessage()" disabled>发送</button>' +
+    '          </div>' +
+    '        </div>' +
+    '      </main>' +
+    '    </div>' +
+    '  </div>' +
+    '  <div class="backdrop" id="backdrop" tabindex="-1" aria-hidden="true"></div>' +
+    '  <script>' +
+    '    var isAuthenticated = false, currentPassword = "", models = {}, chatHistory = [], currentModel = "";' +
+    '    function handlePasswordKeyDown(e) { if (e.key === "Enter") { e.preventDefault(); authenticate(); } }' +
+    '    function handleKeyDown(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }' +
+    '    document.getElementById("authorInfo").addEventListener("click", function(){ window.open("https://www.youtube.com/@%E5%BA%B7%E5%BA%B7%E7%9A%84V2Ray%E4%B8%8EClash", "_blank"); });' +
+    '    (function(){ try {' +
+    '      var hamburger = document.getElementById("hamburger");' +
+    '      var sidebar = document.getElementById("sidebar");' +
+    '      var backdrop = document.getElementById("backdrop");' +
+    '      function openSidebar(){ if (sidebar) sidebar.classList.add("open"); if (backdrop) backdrop.classList.add("show"); document.body.style.overflow = "hidden"; }' +
+    '      function closeSidebar(){ if (sidebar) sidebar.classList.remove("open"); if (backdrop) backdrop.classList.remove("show"); document.body.style.overflow = ""; }' +
+    '      if (hamburger){ hamburger.addEventListener("click", function(){ if (window.innerWidth <= 900){ if (sidebar && sidebar.classList.contains("open")) closeSidebar(); else openSidebar(); } }); }' +
+    '      if (backdrop) backdrop.addEventListener("click", closeSidebar);' +
+    '      document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeSidebar(); });' +
+    '      window.addEventListener("resize", function(){ if (window.innerWidth > 900) closeSidebar(); });' +
+    '    } catch (err){ console.error("mobile sidebar script error", err); } })();' +
+    '    window.addEventListener("load", function(){ fetch("/api/models").then(function(res){ return res.json(); }).then(function(data){ models = data || {}; populateModelSelect(); }).catch(function(e){ console.error("load models error", e); }); });' +
+    '    function populateModelSelect(){ var sel = document.getElementById("modelSelect"); if (!sel) return; sel.innerHTML = "<option value=\\"\\">请选择模型...</option>"; for (var k in models){ if (models.hasOwnProperty(k)){ var opt = document.createElement("option"); opt.value = k; opt.textContent = models[k].name || k; sel.appendChild(opt); } } }' +
+    '    function updateModelInfo(){ try { var sel = document.getElementById("modelSelect"); var infoDiv = document.getElementById("modelInfo"); var selected = sel.value; if (!selected){ infoDiv.innerHTML = "请先选择一个AI模型"; return; } if (currentModel && currentModel !== selected){ chatHistory = []; document.getElementById("messages").innerHTML = "<div class=\\"message assistant\\"><div class=\\"message-content\\">🔄 已切换模型，正在加载历史记录...<br><br>🇨🇳 新模型已配置为中文回复模式。</div></div>"; } currentModel = selected; var model = models[selected]; if (!model){ infoDiv.innerHTML = "模型信息加载失败"; return; } var features = (model.features || []).join(" • "); var html = "<strong>" + (model.name || selected) + "</strong><br>📝 " + (model.description || "") + "<br><br>🎯 <strong>特色功能:</strong><br>" + features + "<br><br>💰 <strong>价格:</strong><br>• 输入: $" + (model.input_price || "-") + "/百万tokens<br>• 输出: $" + (model.output_price || "-") + "/百万tokens<br><br>📏 <strong>限制:</strong><br>• 上下文: " + (model.context ? model.context.toLocaleString() : "-") + " tokens<br>• 最大输出: " + (model.max_output ? model.max_output.toLocaleString() : "-") + " tokens"; infoDiv.innerHTML = html; if (isAuthenticated){ document.getElementById("messageInput").disabled = false; document.getElementById("sendBtn").disabled = false; loadHistory(); } } catch (e){ console.error("updateModelInfo error", e); } }' +
+    '    function authenticate(){ var password = document.getElementById("passwordInput").value; if (!password){ showError("请输入密码"); return; } fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "test", model: "deepseek-r1", password: password }) }).then(function(res){ if (res.status === 401){ showError("密码错误，请重试"); return; } return res.json(); }).then(function(data){ isAuthenticated = true; currentPassword = password; var auth = document.getElementById("authSection"); if (auth) { auth.classList.add("authenticated"); auth.innerHTML = "<p>✅ 身份验证成功！</p>"; } var ms = document.getElementById("modelSection"); if (ms) ms.style.display = "block"; var hs = document.getElementById("historySection"); if (hs) hs.style.display = "block"; showSuccess("验证成功！请选择AI模型开始聊天。"); }).catch(function(e){ showError("验证失败: " + e.message); }); }' +
+    '    function sendMessage(){ try { if (!isAuthenticated || !currentModel){ showError("请先验证身份并选择模型"); return; } var input = document.getElementById("messageInput"); var message = input.value.trim(); if (!message) return; addMessage("user", message); input.value = ""; chatHistory.push({ role: "user", content: message, timestamp: new Date() }); document.getElementById("loading").style.display = "block"; document.getElementById("sendBtn").disabled = true; fetch("/api/chat", { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify({ message: message, model: currentModel, password: currentPassword, history: chatHistory.slice(-10) }) }).then(function(res){ return res.json().then(function(data){ if (!res.ok){ showError(data.error || "发送消息失败"); return; } addMessage("assistant", data.reply || "", data.model || "", data.usage || null); chatHistory.push({ role: "assistant", content: data.reply || "", timestamp: new Date(), model: data.model }); saveHistory(); }); }).catch(function(e){ showError("网络错误: " + e.message); }).finally(function(){ document.getElementById("loading").style.display = "none"; document.getElementById("sendBtn").disabled = false; }); } catch (e){ console.error("sendMessage error", e); showError("发送消息时发生意外错误: " + e.message); document.getElementById("loading").style.display = "none"; document.getElementById("sendBtn").disabled = false; } }' +
+    '    function addMessage(role, content, modelName, usage){ var messagesDiv = document.getElementById("messages"); var messageDiv = document.createElement("div"); messageDiv.className = "message " + role; var wrapper = document.createElement("div"); wrapper.className = "message-content"; wrapper.innerHTML = content; messageDiv.appendChild(wrapper); var meta = document.createElement("div"); meta.style.fontSize = "12px"; meta.style.color = "#6b7280"; meta.style.marginTop = "6px"; var metaInfo = new Date().toLocaleTimeString(); if (modelName) metaInfo = (modelName + " • " + metaInfo); if (usage && usage.total_tokens) metaInfo += (" • " + usage.total_tokens + " tokens"); meta.textContent = metaInfo; messageDiv.appendChild(meta); messagesDiv.appendChild(messageDiv); messagesDiv.scrollTop = messagesDiv.scrollHeight; }' +
+    '    function loadHistory(){ if (!isAuthenticated || !currentModel) return; try { var sessionId = currentModel + "_history"; fetch("/api/history?password=" + encodeURIComponent(currentPassword) + "&sessionId=" + encodeURIComponent(sessionId)).then(function(res){ return res.json(); }).then(function(data){ chatHistory = data.history || []; var messagesDiv = document.getElementById("messages"); messagesDiv.innerHTML = "<div class=\\"message assistant\\"><div class=\\"message-content\\">📚 已加载 " + (models[currentModel] ? models[currentModel].name : currentModel) + " 的历史记录</div></div>"; chatHistory.forEach(function(msg){ addMessage(msg.role, msg.content, msg.model || ""); }); if (chatHistory.length === 0) showSuccess((models[currentModel] ? models[currentModel].name : currentModel) + " 暂无历史记录"); else showSuccess("已加载 " + (models[currentModel] ? models[currentModel].name : currentModel) + " 的 " + chatHistory.length + " 条历史记录"); }).catch(function(e){ showError("加载历史记录失败: " + e.message); }); } catch (e){ console.error("loadHistory error", e); } }' +
+    '    function saveHistory(){ if (!isAuthenticated || !currentModel) return; try { var sessionId = currentModel + "_history"; fetch("/api/history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: currentPassword, sessionId: sessionId, history: chatHistory }) }); } catch (e){ console.error("saveHistory failed", e); } }' +
+    '    function clearHistory(){ if (!currentModel){ showError("请先选择模型"); return; } if (!confirm("确定要清空所有聊天记录吗？")) return; chatHistory = []; saveHistory(); document.getElementById("messages").innerHTML = "<div class=\\"message assistant\\"><div class=\\"message-content\\">✨ 聊天记录已清空</div></div>"; showSuccess("聊天记录已清空"); }' +
+    '    function showError(msg){ var sb = document.querySelector(".sidebar"); if (!sb) return; var div = document.createElement("div"); div.className = "error"; div.style.background = "#fef2f2"; div.style.color = "#dc2626"; div.style.padding = "8px"; div.style.borderRadius = "8px"; div.style.marginTop = "8px"; div.textContent = msg; sb.appendChild(div); setTimeout(function(){ div.remove(); }, 5000); }' +
+    '    function showSuccess(msg){ var sb = document.querySelector(".sidebar"); if (!sb) return; var div = document.createElement("div"); div.className = "success"; div.style.background = "#f0f9ff"; div.style.color = "#0369a1"; div.style.padding = "8px"; div.style.borderRadius = "8px"; div.style.marginTop = "8px"; div.textContent = msg; sb.appendChild(div); setTimeout(function(){ div.remove(); }, 3000); }' +
+    '    function copyCodeBlock(button){ try { var encoded = button.getAttribute("data-code"); if (!encoded) throw new Error("未找到代码数据"); var code = decodeURIComponent(escape(atob(encoded))); navigator.clipboard.writeText(code).then(function(){ var original = button.textContent; button.textContent = "✓ 已复制"; button.style.background = "#10b981"; setTimeout(function(){ button.textContent = original; button.style.background = "#374151"; }, 2000); }).catch(function(clipboardErr){ try { var codeElement = button.closest(".code-block").querySelector("pre code"); var range = document.createRange(); range.selectNodeContents(codeElement); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); button.textContent = "已选中，请 Ctrl+C"; button.style.background = "#f59e0b"; setTimeout(function(){ button.textContent = "复制"; button.style.background = "#374151"; sel.removeAllRanges(); }, 3000); } catch (selectErr){ button.textContent = "复制失败"; button.style.background = "#ef4444"; setTimeout(function(){ button.textContent = "复制"; button.style.background = "#374151"; }, 3000); } }); } catch (error){ console.error("代码解码失败:", error); button.textContent = "解码失败"; button.style.background = "#ef4444"; setTimeout(function(){ button.textContent = "复制"; button.style.background = "#374151"; }, 3000); } }' +
+    '    function testCopyFunction(){ var testCode = "def hello_world():\\n    print(\\"Hello, World!\\")\\n    return True"; navigator.clipboard.writeText(testCode).then(function(){ console.log("剪贴板正常"); }).catch(function(err){ console.log("剪贴板异常", err); }); }' +
+    '  </script>' +
+    '</body>' +
+    '</html>';
 }
